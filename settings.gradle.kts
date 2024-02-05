@@ -1,5 +1,6 @@
 dependencyResolutionManagement {
     repositories {
+        mavenLocal()
         maven("https://hub.spigotmc.org/nexus/content/groups/public/") {
             content {
                 includeGroup("org.spigotmc")

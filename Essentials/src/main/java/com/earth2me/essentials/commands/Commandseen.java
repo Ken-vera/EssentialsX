@@ -8,12 +8,16 @@ import com.earth2me.essentials.utils.CommonPlaceholders;
 import com.earth2me.essentials.utils.DateUtil;
 import com.earth2me.essentials.utils.FormatUtil;
 import com.earth2me.essentials.utils.StringUtil;
+import me.kenvera.chronocore.ChronoCore;
+import me.kenvera.chronocore.Object.Ban;
+import me.kenvera.chronocore.Object.Mute;
 import net.ess3.api.TranslatableException;
 import org.bukkit.BanEntry;
 import org.bukkit.BanList;
 import org.bukkit.Location;
 import org.bukkit.Server;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -119,12 +123,25 @@ public class Commandseen extends EssentialsCommand {
         if (user.isJailed()) {
             sender.sendTl("whoisJail", user.getJailTimeout() > 0 ? user.getFormattedJailTime() : CommonPlaceholders.trueFalse(sender, true));
         }
-        if (user.isMuted()) {
-            final long muteTimeout = user.getMuteTimeout();
-            if (!user.hasMuteReason()) {
-                sender.sendTl("whoisMuted", muteTimeout > 0 ? DateUtil.formatDateDiff(muteTimeout) : CommonPlaceholders.trueFalse(sender, true));
-            } else {
-                sender.sendTl("whoisMutedReason", muteTimeout > 0 ? DateUtil.formatDateDiff(muteTimeout) : CommonPlaceholders.trueFalse(sender, true), user.getMuteReason());
+//        if (user.isMuted()) {
+//            final long muteTimeout = user.getMuteTimeout();
+//            if (!user.hasMuteReason()) {
+//                sender.sendTl("whoisMuted", muteTimeout > 0 ? DateUtil.formatDateDiff(muteTimeout) : CommonPlaceholders.trueFalse(sender, true));
+//            } else {
+//                sender.sendTl("whoisMutedReason", muteTimeout > 0 ? DateUtil.formatDateDiff(muteTimeout) : CommonPlaceholders.trueFalse(sender, true), user.getMuteReason());
+//            }
+//        }
+        if (ChronoCore.getInstance().getMuteHandler().isMuted(user.getUUID().toString())) {
+            Mute mute = ChronoCore.getInstance().getMuteHandler().getMute(user.getUUID().toString());
+            long expire = mute.getExpire();
+            String reason = mute.getReason();
+            if (expire >= System.currentTimeMillis()) {
+                long duration = expire - System.currentTimeMillis();
+                if (reason != null) {
+                    sender.sendTl("whoisMutedReason", duration > 0 ? DateUtil.parseTimeToString(duration) : CommonPlaceholders.trueFalse(sender, true), reason);
+                } else {
+                    sender.sendTl("whoisMuted", duration > 0 ? DateUtil.parseTimeToString(duration) : CommonPlaceholders.trueFalse(sender, true));
+                }
             }
         }
         final String location = user.getGeoLocation();
@@ -156,26 +173,55 @@ public class Commandseen extends EssentialsCommand {
             sender.sendTl("whoisWhitelist", CommonPlaceholders.trueFalse(sender, user.getBase().isWhitelisted()));
         }
 
-        if (BanLookup.isBanned(ess, user)) {
-            final BanEntry banEntry = BanLookup.getBanEntry(ess, user.getName());
-            final Object reason = showBan ? banEntry.getReason() : CommonPlaceholders.trueFalse(sender, true);
-            sender.sendTl("whoisBanned", reason);
-            if (banEntry.getExpiration() != null) {
-                final Date expiry = banEntry.getExpiration();
-                Object expireString = AdventureUtil.parsed(sender.tl("now"));
-                if (expiry.after(new Date())) {
-                    expireString = DateUtil.formatDateDiff(expiry.getTime());
+//        if (BanLookup.isBanned(ess, user)) {
+//            final BanEntry banEntry = BanLookup.getBanEntry(ess, user.getName());
+//            final Object reason = showBan ? banEntry.getReason() : CommonPlaceholders.trueFalse(sender, true);
+//            sender.sendTl("whoisBanned", reason);
+//            if (banEntry.getExpiration() != null) {
+//                final Date expiry = banEntry.getExpiration();
+//                Object expireString = AdventureUtil.parsed(sender.tl("now"));
+//                if (expiry.after(new Date())) {
+//                    expireString = DateUtil.formatDateDiff(expiry.getTime());
+//                }
+//                sender.sendTl("whoisTempBanned", expireString);
+//            }
+//        }
+
+        if (ChronoCore.getInstance().getBanHandler().isBanned(user.getUUID().toString())) {
+            try {
+                Ban ban = ChronoCore.getInstance().getBanHandler().getBan(user.getUUID().toString());
+                final String reason = ban.getReason();
+                final long expireLong = ban.getExpire() - System.currentTimeMillis();
+                final String expireString = DateUtil.parseTimeToString(expireLong);
+                sender.sendTl("whoisBanned", reason);
+                if (ban.getExpire() != -1) {
+                    sender.sendTl("whoisTempBanned", expireString);
                 }
-                sender.sendTl("whoisTempBanned", expireString);
+            } catch (SQLException e) {
+                e.printStackTrace(System.out);
             }
         }
 
-        if (user.isMuted()) {
-            final long muteTimeout = user.getMuteTimeout();
-            if (!user.hasMuteReason()) {
-                sender.sendTl("whoisMuted", muteTimeout > 0 ? DateUtil.formatDateDiff(muteTimeout) : CommonPlaceholders.trueFalse(sender, true));
-            } else {
-                sender.sendTl("whoisMutedReason", muteTimeout > 0 ? DateUtil.formatDateDiff(muteTimeout) : CommonPlaceholders.trueFalse(sender, true), user.getMuteReason());
+//        if (user.isMuted()) {
+//            final long muteTimeout = user.getMuteTimeout();
+//            if (!user.hasMuteReason()) {
+//                sender.sendTl("whoisMuted", muteTimeout > 0 ? DateUtil.formatDateDiff(muteTimeout) : CommonPlaceholders.trueFalse(sender, true));
+//            } else {
+//                sender.sendTl("whoisMutedReason", muteTimeout > 0 ? DateUtil.formatDateDiff(muteTimeout) : CommonPlaceholders.trueFalse(sender, true), user.getMuteReason());
+//            }
+//        }
+
+        if (ChronoCore.getInstance().getMuteHandler().isMuted(user.getUUID().toString())) {
+            Mute mute = ChronoCore.getInstance().getMuteHandler().getMute(user.getUUID().toString());
+            long expire = mute.getExpire();
+            String reason = mute.getReason();
+            if (expire >= System.currentTimeMillis()) {
+                long duration = expire - System.currentTimeMillis();
+                if (reason != null) {
+                    sender.sendTl("whoisMutedReason", duration > 0 ? DateUtil.parseTimeToString(duration) : CommonPlaceholders.trueFalse(sender, true), reason);
+                } else {
+                    sender.sendTl("whoisMuted", duration > 0 ? DateUtil.parseTimeToString(duration) : CommonPlaceholders.trueFalse(sender, true));
+                }
             }
         }
 

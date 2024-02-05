@@ -4,6 +4,7 @@ import net.ess3.api.TranslatableException;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -169,5 +170,32 @@ public final class DateUtil {
             return tlLiteral("now");
         }
         return sb.toString().trim();
+    }
+
+    public static String parseTimeToString(long timeMillis) {
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(timeMillis) % 60;
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(timeMillis) % 60;
+        long hours = TimeUnit.MILLISECONDS.toHours(timeMillis) % 24;
+        long days = TimeUnit.MILLISECONDS.toDays(timeMillis);
+
+        StringBuilder result = new StringBuilder();
+
+        if (days > 0) {
+            result.append(days).append(" Day").append(days > 1 ? "s" : "").append(" ");
+        }
+
+        if (hours > 0) {
+            result.append(hours).append(" Hour").append(hours > 1 ? "s" : "").append(" ");
+        }
+
+        if (minutes > 0) {
+            result.append(minutes).append(" Minute").append(minutes > 1 ? "s" : "").append(" ");
+        }
+
+        if (seconds > 0) {
+            result.append(seconds).append(" Second").append(seconds > 1 ? "s" : "");
+        }
+
+        return result.toString().trim();
     }
 }
